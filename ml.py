@@ -10,7 +10,7 @@ import pickle
 batch_size = 2
 
 width = 1000
-height = 1764
+height = 352
 num_channels = 2
 num_labels = 2
 
@@ -19,72 +19,102 @@ depth = 40
 
 num_hidden = 500
 # data shape = (1764000, 2)
-def real_get_data():
-    path = '/home/williamjlee/data_clean'
-    rand_nongun = np.random.choice(os.listdir(os.path.join(path, 'nongun')), batch_size / 2, replace=False)
-    rand_gun = np.random.choice(os.listdir(os.path.join(path, 'gun')), batch_size / 2, replace=False)
+pathr = '/Volumes/Seagate Backup Plus Drive/new_sound/data_clean'
+
+nonguns = os.listdir(os.path.join(pathr, 'nongun'))
+guns = os.listdir(os.path.join(pathr, 'gun'))
+nonguns_test = os.listdir(os.path.join(pathr, 'nongun_test'))
+guns_test = os.listdir(os.path.join(pathr, 'gun_test'))
+
+
+def real_get_data(ind, ind2, ind3, ind4):
+    path = '/Volumes/Seagate Backup Plus Drive/new_sound/data_clean'
+    rand_nongun = [nonguns[ind]] #np.random.choice(os.listdir(os.path.join(path, 'nongun')), batch_size // 2, replace=False)
+    rand_gun = [guns[ind2]]#np.random.choice(os.listdir(os.path.join(path, 'gun')), batch_size // 2, replace=False)
     
-    nongun_test = np.random.choice(os.listdir(os.path.join(path, 'nongun_test')), batch_size / 2, replace=False)
-    gun_test = np.random.choice(os.listdir(os.path.join(path, 'gun_test')), batch_size / 2, replace=False)
+    nongun_test = [nonguns_test[ind3]]#np.random.choice(os.listdir(os.path.join(path, 'nongun_test')), batch_size // 2, replace=False)
+    gun_test = [guns_test[ind4]]#np.random.choice(os.listdir(os.path.join(path, 'gun_test')), batch_size // 2, replace=False)
     
+
     train = []
-    leng = 352800
+    leng = width * height
     for f in rand_gun:
         #r, data = scipy.io.wavfile.read(os.path.join(path, 'gun', f))
         with open(os.path.join(path, 'gun', f), 'rb') as rp:
             r, data = pickle.load(rp)
-        result = np.zeros((leng, 2))
-        m = min(data.shape[0], leng)
-        result[:m, :2] = data[:m, :2]
-        result = np.reshape(result, (1000, -1, result.shape[1]))
-        train.append(result)
+            if len(data.shape) != 2:
+                continue
+            result = np.zeros((leng, 2))
+            m = min(data.shape[0], leng)
+            result[:m, :2] = data[:m, :2]
+            print(result.shape)
+            result = np.reshape(result, (1000, -1, result.shape[1]))
+            train.append(result)
     for f in rand_nongun:
         #r, data = scipy.io.wavfile.read(os.path.join(path, 'nongun', f))
         with open(os.path.join(path, 'nongun', f), 'rb') as rp:
             r, data = pickle.load(rp)
-        result = np.zeros((leng, 2))
-        m = min(data.shape[0], leng)
-        result[:m, :2] = data[:m, :2]
-        result = np.reshape(result, (1000, -1, result.shape[1]))
-        train.append(result)
+            if len(data.shape) != 2:
+                continue
+            result = np.zeros((leng, 2))
+            m = min(data.shape[0], leng)
+            result[:m, :2] = data[:m, :2]
+            result = np.reshape(result, (1000, -1, result.shape[1]))
+            train.append(result)
     train = np.array(train)
-    train_label = np.array([[1,0],[1,0],[1,0],[1,0],[1,0],
-                      [0,1],[0,1],[0,1],[0,1],[0,1]])
+    train_label = np.array([[1,0],[0,1]])
     
     test = []
     for f in gun_test:
         #r, data = scipy.io.wavfile.read(os.path.join(path, 'gun_test', f))
         with open(os.path.join(path, 'gun_test', f), 'rb') as rp:
             r, data = pickle.load(rp)
-        result = np.zeros((leng, 2))
-        m = min(data.shape[0], leng)
-        result[:m, :2] = data[:m, :2]
-        result = np.reshape(result, (1000, -1, result.shape[1]))
-        test.append(result)
+            if len(data.shape) != 2:
+                continue
+            result = np.zeros((leng, 2))
+            m = min(data.shape[0], leng)
+            result[:m, :2] = data[:m, :2]
+            result = np.reshape(result, (1000, -1, result.shape[1]))
+            test.append(result)
     for f in nongun_test:
         #r, data = scipy.io.wavfile.read(os.path.join(path, 'nongun_test', f))
         with open(os.path.join(path, 'nongun_test', f), 'rb') as rp:
             r, data = pickle.load(rp)
-        result = np.zeros((leng, 2))
-        m = min(data.shape[0], leng)
-        result[:m, :2] = data[:m, :2]
-        result = np.reshape(result, (1000, -1, result.shape[1]))
-        test.append(result)
+            if len(data.shape) != 2:
+                continue
+            result = np.zeros((leng, 2))
+            m = min(data.shape[0], leng)
+            result[:m, :2] = data[:m, :2]
+            result = np.reshape(result, (1000, -1, result.shape[1]))
+            test.append(result)
     test = np.array(test)
-    test_label = np.array([[1,0],[1,0],[1,0],[1,0],[1,0],
-                      [0,1],[0,1],[0,1],[0,1],[0,1]])
-    yield train, train_label, test, test_label
+    test_label = np.array([[1,0],[0,1]])
+    return train, train_label, test, test_label
 
 
 # 5 of each class
 num_iter = 1000
 num_report = 10
+
+rind = 0
+rind2 = 0
+rind3 = 0
+rind4 = 0
+
 def train_loop(graph, train, test, train_labels, test_labels, runs):
+    global rind, rind2, rind3, rind4
     with tf.Session(graph=graph) as sess:
+        saver = tf.train.Saver()
         tf.global_variables_initializer().run()
         for step in range(num_iter):
             feed_dict = {}
-            x, y, tx, ty = real_get_data()
+            x, y, tx, ty = real_get_data(rind, rind2, rind3, rind4)
+
+            rind = (rind + 1) % len(nonguns)
+            rind2 = (rind2 + 1) % len(guns)
+            rind3 = (rind3 + 1) % len(nonguns_test)
+            rind4 = (rind4 + 1) % len(guns_test)
+
             feed_dict[train] = x
             feed_dict[train_labels] = y
             feed_dict[test] = tx
@@ -95,6 +125,9 @@ def train_loop(graph, train, test, train_labels, test_labels, runs):
                 print('Opt: {}'.format(res[0]))
                 print('Loss: {}'.format(res[1]))
                 print('Pred: {}'.format(res[2]))
+            if step != 0 and step % 50 == 0:
+                spath = saver.save(sess, 'saves/model.ckpt', global_step=step)
+                print('model saved to %s' % spath)
 
 
 
@@ -138,7 +171,7 @@ def model_run(train=True):
             [num_hidden, num_labels], stddev=stddev4
         ))
         layer4_biases = tf.Variable(tf.zeros([num_labels]))
-        
+
         def model(data):
             layer1 = tf.nn.conv2d(data, layer1_weights, [1, 1, 1, 1], padding='SAME')
             relu1 = tf.nn.relu(layer1 + layer1_biases)
@@ -162,7 +195,7 @@ def model_run(train=True):
             )
         optimizer = tf.train.AdamOptimizer(1e-4).minimize(loss)
         test_prediction = tf.nn.softmax(model(test_dataset))
-    
+        
     if train:
         train_loop(graph, train_dataset, test_dataset, train_labels, test_labels, [optimizer, loss, train_prediction])
 
