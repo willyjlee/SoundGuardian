@@ -6,7 +6,7 @@ import zipfile
 import numpy as np
 import tensorflow as tf
 
-batch_size = 10
+batch_size = 2
 
 width = 1000
 height = 1764
@@ -19,7 +19,7 @@ depth = 40
 num_hidden = 500
 # data shape = (1764000, 2)
 def real_get_data():
-    path = '/home/williamjlee/data'
+    path = '/home/williamjlee/data_clean'
     rand_nongun = np.random.choice(os.listdir(os.path.join(path, 'nongun')), batch_size / 2, replace=False)
     rand_gun = np.random.choice(os.listdir(os.path.join(path, 'gun')), batch_size / 2, replace=False)
     
@@ -29,14 +29,18 @@ def real_get_data():
     train = []
     leng = 352800
     for f in rand_gun:
-        r, data = scipy.io.wavfile.read(os.path.join(path, 'gun', f))
+        #r, data = scipy.io.wavfile.read(os.path.join(path, 'gun', f))
+        with open(os.path.join(path, 'gun', f), 'rb') as rp:
+            r, data = pickle.load(rp)
         result = np.zeros((leng, 2))
         m = min(data.shape[0], leng)
         result[:m, :2] = data[:m, :2]
         result = np.reshape(result, (1000, -1, result.shape[1]))
         train.append(result)
     for f in rand_nongun:
-        r, data = scipy.io.wavfile.read(os.path.join(path, 'nongun', f))
+        #r, data = scipy.io.wavfile.read(os.path.join(path, 'nongun', f))
+        with open(os.path.join(path, 'nongun', f), 'rb') as rp:
+            r, data = pickle.load(rp)
         result = np.zeros((leng, 2))
         m = min(data.shape[0], leng)
         result[:m, :2] = data[:m, :2]
@@ -48,14 +52,18 @@ def real_get_data():
     
     test = []
     for f in gun_test:
-        r, data = scipy.io.wavfile.read(os.path.join(path, 'gun_test', f))
+        #r, data = scipy.io.wavfile.read(os.path.join(path, 'gun_test', f))
+        with open(os.path.join(path, 'gun_test', f), 'rb') as rp:
+            r, data = pickle.load(rp)
         result = np.zeros((leng, 2))
         m = min(data.shape[0], leng)
         result[:m, :2] = data[:m, :2]
         result = np.reshape(result, (1000, -1, result.shape[1]))
         test.append(result)
     for f in nongun_test:
-        r, data = scipy.io.wavfile.read(os.path.join(path, 'nongun_test', f))
+        #r, data = scipy.io.wavfile.read(os.path.join(path, 'nongun_test', f))
+        with open(os.path.join(path, 'nongun_test', f), 'rb') as rp:
+            r, data = pickle.load(rp)
         result = np.zeros((leng, 2))
         m = min(data.shape[0], leng)
         result[:m, :2] = data[:m, :2]
