@@ -27,16 +27,19 @@ def real_get_data():
     gun_test = np.random.choice(os.listdir(os.path.join(path, 'gun_test')), batch_size / 2, replace=False)
     
     train = []
+    leng = 352800
     for f in rand_gun:
         r, data = scipy.io.wavfile.read(os.path.join(path, 'gun', f))
-        result = np.zeros((1764000, 2))
-        result[:data.shape[0], :data.shape[1]] = data
+        result = np.zeros((leng, 2))
+        m = min(data.shape[0], leng)
+        result[:m, :2] = data[:m, :2]
         result = np.reshape(result, (1000, -1, result.shape[1]))
         train.append(result)
     for f in rand_nongun:
         r, data = scipy.io.wavfile.read(os.path.join(path, 'nongun', f))
-        result = np.zeros((1764000, 2))
-        result[:data.shape[0], :data.shape[1]] = data
+        result = np.zeros((leng, 2))
+        m = min(data.shape[0], leng)
+        result[:m, :2] = data[:m, :2]
         result = np.reshape(result, (1000, -1, result.shape[1]))
         train.append(result)
     train = np.array(train)
@@ -46,14 +49,16 @@ def real_get_data():
     test = []
     for f in gun_test:
         r, data = scipy.io.wavfile.read(os.path.join(path, 'gun_test', f))
-        result = np.zeros((1764000, 2))
-        result[:data.shape[0], :data.shape[1]] = data
+        result = np.zeros((leng, 2))
+        m = min(data.shape[0], leng)
+        result[:m, :2] = data[:m, :2]
         result = np.reshape(result, (1000, -1, result.shape[1]))
         test.append(result)
     for f in nongun_test:
         r, data = scipy.io.wavfile.read(os.path.join(path, 'nongun_test', f))
-        result = np.zeros((1764000, 2))
-        result[:data.shape[0], :data.shape[1]] = data
+        result = np.zeros((leng, 2))
+        m = min(data.shape[0], leng)
+        result[:m, :2] = data[:m, :2]
         result = np.reshape(result, (1000, -1, result.shape[1]))
         test.append(result)
     test = np.array(test)
@@ -76,7 +81,8 @@ def train_loop(train, test, train_labels, test_labels, runs):
         feed_dict[test] = tx
         feed_dict[test_labels] = ty
         res = sess.run(runs, feed_dict=feed_dict)
-        if i != 0 and i % 10 == 0:
+        print(step)
+        if step != 0 and step % 10 == 0:
             print('Opt: {}'.format(res[0]))
             print('Loss: {}'.format(res[1]))
             print('Pred: {}'.format(res[2]))
@@ -86,6 +92,7 @@ def train_loop(train, test, train_labels, test_labels, runs):
 
 def model_run(train=True):
     tf.reset_default_graph()
+    print('hi')
     test_dataset = tf.placeholder(tf.float32, shape=(batch_size, width, None, num_channels))
     test_labels = tf.placeholder(tf.float32, shape=(batch_size, num_labels))
     train_dataset = tf.placeholder(tf.float32, shape=(batch_size, width, None, num_channels))
@@ -149,7 +156,7 @@ def model_run(train=True):
     if train:
         train_loop(train_dataset, test_dataset, train_labels, test_labels, [optimizer, loss, train_prediction])
 
-
+print('starting')
 model_run(train=True)
 
 
