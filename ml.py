@@ -129,10 +129,45 @@ def train_loop(graph, train, test, train_labels, test_labels, runs):
                 spath = saver.save(sess, 'saves/model.ckpt', global_step=step)
                 print('model saved to %s' % spath)
 
+def predict(graph, train, test, train_labels, test_labels, runs):
+    with tf.Session(graph=graph) as sess:
+        saver = tf.train.Saver()
+        if os.listdir('saves/'):
+            checkpoint = tf.train.latest_checkpoint('saves/')
+            saver.restore(sess, checkpoint)
+            print(checkpoint, 'model loaded...')
+        path = '/Volumes/Seagate Backup Plus Drive/new_sound/data_clean'
+        nonguns = np.random.choice(os.listdir(os.path.join(path, 'nongun')), 1, replace=False)
+        guns = np.random.choice(os.listdir(os.path.join(path, 'gun')), 1, replace=False)
 
+        feed_dict = {}
 
+        leng = width * height
+        inp = []
+        with open(os.path.join(path, 'nongun', nonguns[0]), 'rb') as rp:
+            r, data = pickle.load(rp)
+            result = np.zeros((leng, 2))
+            m = min(data.shape[0], leng)
+            result[:m, :2] = data[:m, :2]
+            result = np.reshape(result, (1000, -1, result.shape[1]))
+            inp.append(result)
 
-def model_run(train=True):
+        with open(os.path.join(path, 'gun', guns[0]), 'rb') as rp:
+            r, data = pickle.load(rp)
+            result = np.zeros((leng, 2))
+            m = min(data.shape[0], leng)
+            result[:m, :2] = data[:m, :2]
+            result = np.reshape(result, (1000, -1, result.shape[1]))
+            inp.append(result)
+        inp = np.array(inp)
+        feed_dict[train] = inp
+        feed_dict[test] = inp
+        feed_dict[train_labels] = np.array([[0,1],[1,0]])
+        feed_dict[test_labels] = np.array([[0,1], [1,0]])
+        res = sess.run(runs, feed_dict=feed_dict)
+    print('predicted: {}'.format(res[0]))
+
+def model_run(train=True, pred=True):
     graph = tf.Graph()
     with graph.as_default():
         print('hi')
@@ -199,8 +234,11 @@ def model_run(train=True):
     if train:
         train_loop(graph, train_dataset, test_dataset, train_labels, test_labels, [optimizer, loss, train_prediction])
 
+    if pred:
+        predict(graph, train_dataset, test_dataset, train_labels, test_labels, [train_prediction])
+
 print('starting')
-model_run(train=True)
+model_run(train=False, pred=True)
 
 
 
